@@ -156,13 +156,13 @@
 
     const label = document.createElement('label');
     label.textContent = name;
-    label.htmlFor = input-${i};
+    label.htmlFor = `input-${i}`;
 
     const input = document.createElement('input');
     input.type = 'number';
     input.step = '0.1';
     input.placeholder = yesterday[i] || '';
-    input.id = input-${i};
+    input.id = `input-${i}`;
     input.setAttribute('data-name', name);
     input.autocomplete = 'off';
 
@@ -191,14 +191,14 @@
         newValues[i] = val;
       }
       if(newValues[i] !== yesterday[i]) {
-        changed.push(<li><strong>${input.dataset.name}:</strong> ${newValues[i]}</li>);
+        changed.push(`<li><strong>${input.dataset.name}:</strong> ${newValues[i]}</li>`);
       }
     });
 
     localStorage.setItem('yesterdaysValues', JSON.stringify(newValues));
 
     if(changed.length > 0) {
-      changesDiv.innerHTML = <h2>Endrede tall</h2><ul>${changed.join('')}</ul>;
+      changesDiv.innerHTML = `<h2>Endrede tall</h2><ul>${changed.join('')}</ul>`;
     } else {
       changesDiv.innerHTML = '<p>Ingen endringer.</p>';
     }
