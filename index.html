@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ringromslogg</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1e293b;
+      margin: 0; padding: 1rem;
+      color: #e0e7ff;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #7dd3fc;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      font-size: 2.25rem;
+      user-select: none;
+      text-shadow: 0 0 8px #38bdf8;
+    }
+    form {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #334155;
+      border-radius: 16px;
+      padding: 2rem 2.5rem;
+      box-shadow: 0 8px 30px rgb(59 130 246 / 0.4);
+    }
+    .entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid #475569;
+      padding-bottom: 0.5rem;
+    }
+    .entry label {
+      flex: 1;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #cbd5e1;
+      user-select: none;
+    }
+    .entry input[type="number"] {
+      width: 70px;
+      padding: 0.4rem 0.7rem;
+      font-size: 1.1rem;
+      border: 2px solid #64748b;
+      border-radius: 10px;
+      text-align: right;
+      background: #1e293b;
+      color: #e0e7ff;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .entry input[type="number"]::placeholder {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .entry input[type="number"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 8px #3b82f6;
+      background: #1e40af;
+      color: #f0f9ff;
+    }
+    button {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 1rem;
+      cursor: pointer;
+      margin-top: 2rem;
+      box-shadow: 0 4px 15px rgb(59 130 246 / 0.6);
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      box-shadow: 0 6px 20px rgb(59 130 246 / 0.8);
+    }
+    #changes {
+      max-width: 480px;
+      margin: 2rem auto 0;
+      background: #fef3c7;
+      border-radius: 16px;
+      padding: 1.2rem 1.8rem;
+      color: #92400e;
+      box-shadow: 0 6px 20px rgb(245 158 11 / 0.35);
+      font-size: 1rem;
+      user-select: none;
+    }
+    #changes h2 {
+      margin-top: 0;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #78350f;
+      text-shadow: 0 0 3px #b45309;
+    }
+    ul {
+      padding-left: 1.4rem;
+      margin: 0.6rem 0 0 0;
+    }
+    li {
+      margin-bottom: 0.3rem;
+    }
+    @media (max-width: 520px) {
+      form, #changes {
+        margin-left: 1rem;
+        margin-right: 1rem;
+      }
+      .entry label {
+        font-size: 0.95rem;
+      }
+      .entry input[type="number"] {
+        width: 60px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Ringromslogg</h1>
+  <form id="logForm"></form>
+  <div id="changes" style="display:none;"></div>
+<script>
+  const fieldNames = [
+    "B-01 C-ringrom", "B-02 C-ringrom", "B-03 C-ringrom", "B-04 C-ringrom", "B-05 C-ringrom",
+    "B-07 C-ringrom", "B-08 C-ringrom", "B-09 B-ringrom", "B-09 C-ringrom", "B-11 C-ringrom",
+    "B-12 C-ringrom", "B-13 C-ringrom", "B-14 C-ringrom", "B-15 C-ringrom", "B-16 C-ringrom",
+    "B-17 C-ringrom", "B-17 D-ringrom", "B-18 C-ringrom", "B-19 C-ringrom", "B-20 C-ringrom",
+    "B-20 D-ringrom", "B-22 C-ringrom", "B-23 C-ringrom", "B-24 C-ringrom", "B-25 C-ringrom",
+    "B-26 C-ringrom", "B-27 C-ringrom", "B-28 C-ringrom", "B-29 C-ringrom", "B-31 C-ringrom",
+    "B-32 B-ringrom", "B-32 C-ringrom", "B-33 C-ringrom", "B-34 C-ringrom", "B-35 C-ringrom",
+    "B-36 C-ringrom", "B-37 C-ringrom", "B-38 C-ringrom", "B-39 C-ringrom", "B-40 C-ringrom",
+    "B-40 D-ringrom", "B-41 C-ringrom", "B-42 C-ringrom"
+  ];
+
+  const form = document.getElementById('logForm');
+  const changesDiv = document.getElementById('changes');
+  const yesterday = JSON.parse(localStorage.getItem('yesterdaysValues') || "[]");
+
+  // Lag feltene dynamisk
+  fieldNames.forEach((name, i) => {
+    const div = document.createElement('div');
+    div.className = 'entry';
+
+    const label = document.createElement('label');
+    label.textContent = name;
+    label.htmlFor = input-${i};
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = '0.1';
+    input.placeholder = yesterday[i] || '';
+    input.id = input-${i};
+    input.setAttribute('data-name', name);
+    input.autocomplete = 'off';
+
+    div.appendChild(label);
+    div.appendChild(input);
+    form.appendChild(div);
+  });
+
+  // Legg til lagre-knapp
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.textContent = 'Lagre';
+  form.appendChild(submitBtn);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inputs = form.querySelectorAll('input[type=number]');
+    const newValues = [];
+    const changed = [];
+
+    inputs.forEach((input, i) => {
+      const val = input.value.trim();
+      if(val === '') {
+        newValues[i] = yesterday[i] || '';
+      } else {
+        newValues[i] = val;
+      }
+      if(newValues[i] !== yesterday[i]) {
+        changed.push(<li><strong>${input.dataset.name}:</strong> ${newValues[i]}</li>);
+      }
+    });
+
+    localStorage.setItem('yesterdaysValues', JSON.stringify(newValues));
+
+    if(changed.length > 0) {
+      changesDiv.innerHTML = <h2>Endrede tall</h2><ul>${changed.join('')}</ul>;
+    } else {
+      changesDiv.innerHTML = '<p>Ingen endringer.</p>';
+    }
+    changesDiv.style.display = 'block';
+    form.reset();
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+</script>
+</body>
+</html>
