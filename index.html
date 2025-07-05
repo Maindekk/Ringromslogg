@@ -132,80 +132,116 @@
   <h1>Ringromslogg</h1>
   <form id="logForm"></form>
   <div id="changes" style="display:none;"></div>
-<script>
-  const fieldNames = [
-    "B-01 C-ringrom", "B-02 C-ringrom", "B-03 C-ringrom", "B-04 C-ringrom", "B-05 C-ringrom",
-    "B-07 C-ringrom", "B-08 C-ringrom", "B-09 B-ringrom", "B-09 C-ringrom", "B-11 C-ringrom",
-    "B-12 C-ringrom", "B-13 C-ringrom", "B-14 C-ringrom", "B-15 C-ringrom", "B-16 C-ringrom",
-    "B-17 C-ringrom", "B-17 D-ringrom", "B-18 C-ringrom", "B-19 C-ringrom", "B-20 C-ringrom",
-    "B-20 D-ringrom", "B-22 C-ringrom", "B-23 C-ringrom", "B-24 C-ringrom", "B-25 C-ringrom",
-    "B-26 C-ringrom", "B-27 C-ringrom", "B-28 C-ringrom", "B-29 C-ringrom", "B-31 C-ringrom",
-    "B-32 B-ringrom", "B-32 C-ringrom", "B-33 C-ringrom", "B-34 C-ringrom", "B-35 C-ringrom",
-    "B-36 C-ringrom", "B-37 C-ringrom", "B-38 C-ringrom", "B-39 C-ringrom", "B-40 C-ringrom",
-    "B-40 D-ringrom", "B-41 C-ringrom", "B-42 C-ringrom"
-  ];
 
-  const form = document.getElementById('logForm');
-  const changesDiv = document.getElementById('changes');
-  const yesterday = JSON.parse(localStorage.getItem('yesterdaysValues') || "[]");
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  // Lag feltene dynamisk
-  fieldNames.forEach((name, i) => {
-    const div = document.createElement('div');
-    div.className = 'entry';
+  <script>
+    // Din Firebase-konfigurasjon:
+    const firebaseConfig = {
+      apiKey: "AIzaSyDT06170Au7xEvnSJR7zkjfe_wdmbOLEjc",
+      authDomain: "ringromslogg-f2ee7.firebaseapp.com",
+      projectId: "ringromslogg-f2ee7",
+      storageBucket: "ringromslogg-f2ee7.firebasestorage.app",
+      messagingSenderId: "594515227147",
+      appId: "1:594515227147:web:833084b2697c8df5f28d0e"
+    };
 
-    const label = document.createElement('label');
-    label.textContent = name;
-    label.htmlFor = `input-${i}`;
+    // Initialiser Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.step = '0.1';
-    input.placeholder = yesterday[i] || '';
-    input.id = `input-${i}`;
-    input.setAttribute('data-name', name);
-    input.autocomplete = 'off';
+    const fieldNames = [
+      "B-01 C-ringrom", "B-02 C-ringrom", "B-03 C-ringrom", "B-04 C-ringrom", "B-05 C-ringrom",
+      "B-07 C-ringrom", "B-08 C-ringrom", "B-09 B-ringrom", "B-09 C-ringrom", "B-11 C-ringrom",
+      "B-12 C-ringrom", "B-13 C-ringrom", "B-14 C-ringrom", "B-15 C-ringrom", "B-16 C-ringrom",
+      "B-17 C-ringrom", "B-17 D-ringrom", "B-18 C-ringrom", "B-19 C-ringrom", "B-20 C-ringrom",
+      "B-20 D-ringrom", "B-22 C-ringrom", "B-23 C-ringrom", "B-24 C-ringrom", "B-25 C-ringrom",
+      "B-26 C-ringrom", "B-27 C-ringrom", "B-28 C-ringrom", "B-29 C-ringrom", "B-31 C-ringrom",
+      "B-32 B-ringrom", "B-32 C-ringrom", "B-33 C-ringrom", "B-34 C-ringrom", "B-35 C-ringrom",
+      "B-36 C-ringrom", "B-37 C-ringrom", "B-38 C-ringrom", "B-39 C-ringrom", "B-40 C-ringrom",
+      "B-40 D-ringrom", "B-41 C-ringrom", "B-42 C-ringrom"
+    ];
 
-    div.appendChild(label);
-    div.appendChild(input);
-    form.appendChild(div);
-  });
+    const form = document.getElementById('logForm');
+    const changesDiv = document.getElementById('changes');
 
-  // Legg til lagre-knapp
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.textContent = 'Lagre';
-  form.appendChild(submitBtn);
+    let previousValues = [];
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const inputs = form.querySelectorAll('input[type=number]');
-    const newValues = [];
-    const changed = [];
+    async function initForm() {
+      // Hent lagrede verdier fra Firestore
+      try {
+        const docRef = db.collection("ringromslogg").doc("dagens");
+        const docSnap = await docRef.get();
+        previousValues = docSnap.exists ? docSnap.data().values : [];
 
-    inputs.forEach((input, i) => {
-      const val = input.value.trim();
-      if(val === '') {
-        newValues[i] = yesterday[i] || '';
-      } else {
-        newValues[i] = val;
+        // Lag inputfeltene med verdier som placeholder
+        fieldNames.forEach((name, i) => {
+          const div = document.createElement('div');
+          div.className = 'entry';
+
+          const label = document.createElement('label');
+          label.textContent = name;
+          label.htmlFor = `input-${i}`;
+
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.step = '0.1';
+          input.placeholder = previousValues[i] || '';
+          input.id = `input-${i}`;
+          input.setAttribute('data-name', name);
+
+          div.appendChild(label);
+          div.appendChild(input);
+          form.appendChild(div);
+        });
+
+        const submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.textContent = 'Lagre';
+        form.appendChild(submitBtn);
+
+      } catch (error) {
+        console.error("Feil ved henting fra Firestore:", error);
+        changesDiv.style.display = 'block';
+        changesDiv.textContent = "Kunne ikke hente data fra serveren.";
       }
-      if(newValues[i] !== yesterday[i]) {
-        changed.push(`<li><strong>${input.dataset.name}:</strong> ${newValues[i]}</li>`);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const inputs = form.querySelectorAll('input[type=number]');
+      const newValues = [];
+      const changed = [];
+
+      inputs.forEach((input, i) => {
+        const val = input.value.trim();
+        newValues[i] = val || previousValues[i] || '';
+        if (newValues[i] !== previousValues[i]) {
+          changed.push(`<li><strong>${input.dataset.name}:</strong> ${newValues[i]}</li>`);
+        }
+      });
+
+      try {
+        await db.collection("ringromslogg").doc("dagens").set({ values: newValues });
+
+        if (changed.length > 0) {
+          changesDiv.innerHTML = `<h2>Endrede tall</h2><ul>${changed.join('')}</ul>`;
+        } else {
+          changesDiv.innerHTML = '<p>Ingen endringer.</p>';
+        }
+        changesDiv.style.display = 'block';
+        form.reset();
+      } catch (error) {
+        console.error("Feil ved lagring til Firestore:", error);
+        changesDiv.style.display = 'block';
+        changesDiv.textContent = "Kunne ikke lagre data til serveren.";
       }
     });
 
-    localStorage.setItem('yesterdaysValues', JSON.stringify(newValues));
-
-    if(changed.length > 0) {
-      changesDiv.innerHTML = `<h2>Endrede tall</h2><ul>${changed.join('')}</ul>`;
-    } else {
-      changesDiv.innerHTML = '<p>Ingen endringer.</p>';
-    }
-    changesDiv.style.display = 'block';
-    form.reset();
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-</script>
+    initForm();
+  </script>
 </body>
 </html>
